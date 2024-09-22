@@ -58,7 +58,6 @@ INSTALLED_APPS = [
     'drf_yasg',
     # ap
     "Web",
-    'mdeditor',
 ]
 
 MIDDLEWARE = [
@@ -77,7 +76,9 @@ APPEND_SLASH=False
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [
+            BASE_DIR / 'templates',
+        ],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
