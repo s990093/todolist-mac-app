@@ -1,77 +1,149 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import axios from "axios";
 import TodoCard from "./components/TodoCard";
 import { motion, AnimatePresence } from "framer-motion";
+import { API_URL, commonTasks, Todo } from "./config/constants";
+import { Noto_Sans_TC, Montserrat } from "next/font/google";
 
-interface Todo {
-  id: number;
-  text: string;
-  completed: boolean;
-  priority: "low" | "medium" | "high";
-}
+const notoSansTC = Noto_Sans_TC({
+  subsets: ["latin"],
+  weight: ["400", "500", "700"],
+  display: "swap",
+});
+
+const montserrat = Montserrat({
+  subsets: ["latin"],
+  weight: ["400", "500", "700"],
+  display: "swap",
+});
+
+// 創建 axios 實例
+const api = axios.create({
+  baseURL: API_URL,
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
 
 export default function Home() {
-  const [todos, setTodos] = useState<Todo[]>(() => {
-    if (typeof window !== "undefined") {
-      const savedTodos = localStorage.getItem("todos");
-      return savedTodos ? JSON.parse(savedTodos) : [];
-    }
-    return [];
-  });
+  const [todos, setTodos] = useState<Todo[]>([]);
   const [newTodo, setNewTodo] = useState("");
   const [priority, setPriority] = useState<"low" | "medium" | "high">("medium");
+  const [loading, setLoading] = useState(true);
 
-  // 添加預設任務列表
-  const commonTasks = [
-    "選擇常見任務...",
-    "-作業",
-    "英文作業",
-    "數學筆記",
-    "補習班筆記",
-    "閱讀課外書",
-    "背單字",
-  ];
-
-  // 處理預設任務選擇
-  const handleCommonTaskSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const selectedTask = e.target.value;
-    if (selectedTask !== "選擇常見任務...") {
-      setNewTodo(selectedTask);
+  // 獲取所有待辦事項
+  const fetchTodos = async () => {
+    try {
+      const { data } = await api.get(API_URL);
+      setTodos(data || []);
+    } catch (error) {
+      console.error("Error fetching todos:", error);
+      setTodos([]);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const addTodo = (e: React.FormEvent) => {
+  // 添加新待辦事項
+  const addTodo = async (e: React.FormEvent) => {
     e.preventDefault();
     if (newTodo.trim()) {
-      const newTodos = [
-        ...todos,
-        {
-          id: Date.now(),
+      try {
+        const { data } = await api.post("", {
           text: newTodo.trim(),
+          priority,
           completed: false,
-          priority: priority,
-        },
-      ];
-      setTodos(newTodos);
-      localStorage.setItem("todos", JSON.stringify(newTodos));
-      setNewTodo("");
+        });
+        setTodos([data, ...todos]);
+        setNewTodo("");
+      } catch (error) {
+        console.error("Error adding todo:", error);
+        alert("新增失敗，請稍後再試");
+      }
     }
   };
 
-  const toggleTodo = (id: number) => {
-    const newTodos = todos.map((todo) =>
-      todo.id === id ? { ...todo, completed: !todo.completed } : todo
-    );
-    setTodos(newTodos);
-    localStorage.setItem("todos", JSON.stringify(newTodos));
+  // 切換待辦事項狀態
+  const toggleTodo = async (id: number) => {
+    const todo = todos.find((t) => t.id === id);
+    if (!todo) return;
+
+    try {
+      const { data } = await api.patch(`${id}/`, {
+        completed: !todo.completed,
+      });
+      setTodos(todos.map((t) => (t.id === id ? data : t)));
+    } catch (error) {
+      console.error("Error toggling todo:", error);
+      alert("更新失敗，請稍後再試");
+    }
   };
 
-  const deleteTodo = (id: number) => {
-    const newTodos = todos.filter((todo) => todo.id !== id);
-    setTodos(newTodos);
-    localStorage.setItem("todos", JSON.stringify(newTodos));
+  // 刪除待辦事項
+  const deleteTodo = async (id: number) => {
+    try {
+      await api.delete(`${id}/`);
+      setTodos(todos.filter((todo) => todo.id !== id));
+    } catch (error) {
+      console.error("Error deleting todo:", error);
+      alert("刪除失敗，請稍後再試");
+    }
   };
+
+  useEffect(() => {
+    fetchTodos();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{
+            opacity: 1,
+            scale: 1,
+            transition: {
+              repeat: Infinity,
+              repeatType: "reverse",
+              duration: 1,
+            },
+          }}
+          className={`${montserrat.className} text-2xl font-bold flex items-center gap-3 bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent`}
+        >
+          <span className={notoSansTC.className}>載入中</span>
+          <motion.div
+            animate={{
+              opacity: [0, 1, 1, 1],
+            }}
+            transition={{
+              repeat: Infinity,
+              duration: 2,
+            }}
+            className="flex space-x-1"
+          >
+            {[0, 1, 2].map((index) => (
+              <motion.span
+                key={index}
+                animate={{
+                  y: [0, -10, 0],
+                }}
+                transition={{
+                  repeat: Infinity,
+                  duration: 0.8,
+                  delay: index * 0.2,
+                }}
+                className="inline-block"
+              >
+                •
+              </motion.span>
+            ))}
+          </motion.div>
+        </motion.div>
+      </div>
+    );
+  }
 
   return (
     <main className="container mx-auto px-4 py-8 max-w-2xl">
@@ -86,7 +158,7 @@ export default function Home() {
       <form onSubmit={addTodo} className="mb-8">
         <div className="flex gap-2">
           <select
-            onChange={handleCommonTaskSelect}
+            onChange={(e) => setNewTodo(e.target.value)}
             className="px-4 py-2 rounded-lg bg-gray-800 border border-gray-700 focus:outline-none focus:border-purple-500 text-gray-100"
           >
             {commonTasks.map((task) => (
