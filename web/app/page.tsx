@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import TodoCard from "./components/TodoCard";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface Todo {
   id: number;
@@ -11,7 +12,13 @@ interface Todo {
 }
 
 export default function Home() {
-  const [todos, setTodos] = useState<Todo[]>([]);
+  const [todos, setTodos] = useState<Todo[]>(() => {
+    if (typeof window !== "undefined") {
+      const savedTodos = localStorage.getItem("todos");
+      return savedTodos ? JSON.parse(savedTodos) : [];
+    }
+    return [];
+  });
   const [newTodo, setNewTodo] = useState("");
   const [priority, setPriority] = useState<"low" | "medium" | "high">("medium");
 
@@ -37,7 +44,7 @@ export default function Home() {
   const addTodo = (e: React.FormEvent) => {
     e.preventDefault();
     if (newTodo.trim()) {
-      setTodos([
+      const newTodos = [
         ...todos,
         {
           id: Date.now(),
@@ -45,34 +52,42 @@ export default function Home() {
           completed: false,
           priority: priority,
         },
-      ]);
+      ];
+      setTodos(newTodos);
+      localStorage.setItem("todos", JSON.stringify(newTodos));
       setNewTodo("");
     }
   };
 
   const toggleTodo = (id: number) => {
-    setTodos(
-      todos.map((todo) =>
-        todo.id === id ? { ...todo, completed: !todo.completed } : todo
-      )
+    const newTodos = todos.map((todo) =>
+      todo.id === id ? { ...todo, completed: !todo.completed } : todo
     );
+    setTodos(newTodos);
+    localStorage.setItem("todos", JSON.stringify(newTodos));
   };
 
   const deleteTodo = (id: number) => {
-    setTodos(todos.filter((todo) => todo.id !== id));
+    const newTodos = todos.filter((todo) => todo.id !== id);
+    setTodos(newTodos);
+    localStorage.setItem("todos", JSON.stringify(newTodos));
   };
 
   return (
     <main className="container mx-auto px-4 py-8 max-w-2xl">
-      <h1 className="text-3xl font-bold text-center mb-8 text-purple-400">
+      <motion.h1
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="text-3xl font-bold text-center mb-8 text-purple-400"
+      >
         每日待辦事項
-      </h1>
+      </motion.h1>
 
-      <form onSubmit={addTodo} className="mb-8 space-y-4">
-        <div className="flex gap-2 mb-2">
+      <form onSubmit={addTodo} className="mb-8">
+        <div className="flex gap-2">
           <select
             onChange={handleCommonTaskSelect}
-            className="flex-1 px-4 py-2 rounded-lg bg-gray-800 border border-gray-700 focus:outline-none focus:border-purple-500 text-gray-100"
+            className="px-4 py-2 rounded-lg bg-gray-800 border border-gray-700 focus:outline-none focus:border-purple-500 text-gray-100"
           >
             {commonTasks.map((task) => (
               <option key={task} value={task}>
@@ -80,8 +95,6 @@ export default function Home() {
               </option>
             ))}
           </select>
-        </div>
-        <div className="flex gap-2">
           <input
             type="text"
             value={newTodo}
@@ -110,14 +123,29 @@ export default function Home() {
       </form>
 
       <div className="space-y-4">
-        {todos.map((todo) => (
-          <TodoCard
-            key={todo.id}
-            todo={todo}
-            onToggle={toggleTodo}
-            onDelete={deleteTodo}
-          />
-        ))}
+        <AnimatePresence mode="popLayout">
+          {todos
+            .sort((a, b) => {
+              const priorityOrder = { high: 3, medium: 2, low: 1 };
+              return priorityOrder[b.priority] - priorityOrder[a.priority];
+            })
+            .map((todo) => (
+              <motion.div
+                key={todo.id}
+                initial={{ opacity: 0, x: -50 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 50 }}
+                transition={{ duration: 0.2 }}
+                layout
+              >
+                <TodoCard
+                  todo={todo}
+                  onToggle={toggleTodo}
+                  onDelete={deleteTodo}
+                />
+              </motion.div>
+            ))}
+        </AnimatePresence>
       </div>
     </main>
   );
