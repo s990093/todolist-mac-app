@@ -18,6 +18,7 @@ export default function Home() {
   // 添加預設任務列表
   const commonTasks = [
     "選擇常見任務...",
+    "-作業",
     "英文作業",
     "數學筆記",
     "補習班筆記",
