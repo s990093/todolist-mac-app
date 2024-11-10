@@ -177,13 +177,8 @@ STATICFILES_DIRS = [
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# key
-API_KEY = '4VGFO2C4IBN542V0DRAIAP7TR6UG1L'
 
-
- # 设置ASGI应用
- 
- # 设置通道层的通信后台 - 本地测试用
+# 设置通道层的通信后台 - 本地测试用
 CHANNEL_LAYERS = {
      "default": {
          "BACKEND": "channels.layers.InMemoryChannelLayer"

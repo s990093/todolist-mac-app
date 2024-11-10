@@ -1,16 +1,18 @@
-from django.urls import path
-from . import views
+# from django.urls import path
+# from . import views
+# from rest_framework.routers import DefaultRouter
+# from django.urls import path, include
 
-app_name = "Web"
+# app_name = "Web"
 
-from django.urls import path
-from . import views
+# from django.urls import path
+# from.views import TodoViewSet
 
-urlpatterns = [
-    # ListView for Task
-    path('tasks/', views.TaskListView.as_view(), name='task-list'),
-    
-    # API endpoints
-    path('api/tasks/', views.TaskListAPI.as_view(), name='api-task-list'),
-    path('api/daily-tasks/', views.DailyTaskListAPI.as_view(), name='api-daily-task-list'),
-]
+
+# router = DefaultRouter()
+# router.register(r'todos', TodoViewSet)
+
+
+# urlpatterns = [
+#     path('api/', include(router.urls)),
+# ]

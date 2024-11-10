@@ -1,14 +1,31 @@
 from django.contrib import admin
-from .models import Task, DailyTask
+from .models import Todo
 
-@admin.register(Task)
-class TaskAdmin(admin.ModelAdmin):
-    list_display = ('name', 'day_of_week')  # 在列表中顯示 'Task Name' 和 'Day of the Week'
-    list_filter = ('day_of_week',)  # 添加過濾選項
-    search_fields = ('name',)  # 添加搜尋功能
-
-@admin.register(DailyTask)
-class DailyTaskAdmin(admin.ModelAdmin):
-    list_display = ('name', 'day_of_week', 'task_type')  # 顯示 'Task Name'、'Day of the Week' 和 'Task Type'
-    list_filter = ('day_of_week', 'task_type')  # 添加過濾選項
-    search_fields = ('name',)  # 添加搜尋功能
+@admin.register(Todo)
+class TodoAdmin(admin.ModelAdmin):
+    list_display = ('text', 'completed', 'priority', 'created_at', 'updated_at')
+    list_filter = ('completed', 'priority', 'created_at')
+    search_fields = ('text',)
+    ordering = ('-created_at',)
+    
+    list_editable = ('completed', 'priority')
+    
+    date_hierarchy = 'created_at'
+    
+    list_per_page = 20
+    
+    fieldsets = (
+        ('基本信息', {
+            'fields': ('text', 'completed')
+        }),
+        ('進階選項', {
+            'fields': ('priority',),
+            'classes': ('collapse',)
+        }),
+        ('時間信息', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('wide',)
+        }),
+    )
+    
+    readonly_fields = ('created_at', 'updated_at')

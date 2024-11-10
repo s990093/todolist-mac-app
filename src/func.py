@@ -13,3 +13,5 @@ def show_notification_2(title, text):
     # 对字符串进行转义以确保 osascript 可以正确解析
     cmd = f'display notification "{text}" with title "{title}"'
     subprocess.call(["osascript", "-e", cmd])
+
+
