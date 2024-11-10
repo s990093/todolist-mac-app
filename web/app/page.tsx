@@ -15,6 +15,24 @@ export default function Home() {
   const [newTodo, setNewTodo] = useState("");
   const [priority, setPriority] = useState<"low" | "medium" | "high">("medium");
 
+  // 添加預設任務列表
+  const commonTasks = [
+    "選擇常見任務...",
+    "英文作業",
+    "數學筆記",
+    "補習班筆記",
+    "閱讀課外書",
+    "背單字",
+  ];
+
+  // 處理預設任務選擇
+  const handleCommonTaskSelect = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const selectedTask = e.target.value;
+    if (selectedTask !== "選擇常見任務...") {
+      setNewTodo(selectedTask);
+    }
+  };
+
   const addTodo = (e: React.FormEvent) => {
     e.preventDefault();
     if (newTodo.trim()) {
@@ -50,6 +68,18 @@ export default function Home() {
       </h1>
 
       <form onSubmit={addTodo} className="mb-8 space-y-4">
+        <div className="flex gap-2 mb-2">
+          <select
+            onChange={handleCommonTaskSelect}
+            className="flex-1 px-4 py-2 rounded-lg bg-gray-800 border border-gray-700 focus:outline-none focus:border-purple-500 text-gray-100"
+          >
+            {commonTasks.map((task) => (
+              <option key={task} value={task}>
+                {task}
+              </option>
+            ))}
+          </select>
+        </div>
         <div className="flex gap-2">
           <input
             type="text"
