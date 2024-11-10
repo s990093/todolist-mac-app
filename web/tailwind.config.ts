@@ -15,6 +15,9 @@ const config: Config = {
         "12xl": "12rem",
         "13xl": "13rem",
       },
+      fontFamily: {
+        sans: ['Inter', 'Helvetica', 'Arial', 'sans-serif'], // Replace 'Inter' with your desired font
+      },
       colors: {
         background: "var(--background)",
         foreground: "var(--foreground)",

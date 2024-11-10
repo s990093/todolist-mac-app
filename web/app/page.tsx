@@ -1,53 +1,93 @@
 "use client";
-import { useEffect, useState } from "react";
-import Card from "./Card";
 
-const tasks: Record<number, string> = {
-  0: "周日：周末自我檢討與計劃",
-  1: "周一：數學作業截止",
-  2: "周二：物理實驗報告提交",
-  3: "周三：英語口試準備",
-  4: "周四：化學期中考復習",
-  5: "周五：歷史報告發表",
-  6: "周六：參加數學競賽",
-};
+import { useState } from "react";
+import TodoCard from "./components/TodoCard";
 
-const Home: React.FC = () => {
-  const [today, setToday] = useState<number>(0);
+interface Todo {
+  id: number;
+  text: string;
+  completed: boolean;
+  priority: "low" | "medium" | "high";
+}
 
-  useEffect(() => {
-    const currentDay = new Date().getDay();
-    setToday(currentDay);
-  }, []);
+export default function Home() {
+  const [todos, setTodos] = useState<Todo[]>([]);
+  const [newTodo, setNewTodo] = useState("");
+  const [priority, setPriority] = useState<"low" | "medium" | "high">("medium");
+
+  const addTodo = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (newTodo.trim()) {
+      setTodos([
+        ...todos,
+        {
+          id: Date.now(),
+          text: newTodo.trim(),
+          completed: false,
+          priority: priority,
+        },
+      ]);
+      setNewTodo("");
+    }
+  };
+
+  const toggleTodo = (id: number) => {
+    setTodos(
+      todos.map((todo) =>
+        todo.id === id ? { ...todo, completed: !todo.completed } : todo
+      )
+    );
+  };
+
+  const deleteTodo = (id: number) => {
+    setTodos(todos.filter((todo) => todo.id !== id));
+  };
 
   return (
-    <div className="w-full h-full flex flex-col items-center">
-      <h1 className="text-3xl font-bold text-center text-navyBlues mb-10">
-        每週重要課業事項
+    <main className="container mx-auto px-4 py-8 max-w-2xl">
+      <h1 className="text-3xl font-bold text-center mb-8 text-purple-400">
+        每日待辦事項
       </h1>
-      <div className="grid grid-cols-1 gap-6">
-        {/* 显示当天的卡片 */}
-        <Card
-          day={`今天：${tasks[today].split("：")[0]}`}
-          task={tasks[today].split("：")[1]}
-          isToday={true}
-        />
 
-        {/* 显示其他天的卡片 */}
-        {Object.keys(tasks).map(
-          (key) =>
-            Number(key) !== today && (
-              <Card
-                key={key}
-                day={`${tasks[Number(key)].split("：")[0]}：`}
-                task={tasks[Number(key)].split("：")[1]}
-                isToday={false}
-              />
-            )
-        )}
+      <form onSubmit={addTodo} className="mb-8 space-y-4">
+        <div className="flex gap-2">
+          <input
+            type="text"
+            value={newTodo}
+            onChange={(e) => setNewTodo(e.target.value)}
+            placeholder="新增待辦事項..."
+            className="flex-1 px-4 py-2 rounded-lg bg-gray-800 border border-gray-700 focus:outline-none focus:border-purple-500 text-gray-100"
+          />
+          <select
+            value={priority}
+            onChange={(e) =>
+              setPriority(e.target.value as "low" | "medium" | "high")
+            }
+            className="px-4 py-2 rounded-lg bg-gray-800 border border-gray-700 focus:outline-none focus:border-purple-500 text-gray-100"
+          >
+            <option value="low">低優先級</option>
+            <option value="medium">中優先級</option>
+            <option value="high">高優先級</option>
+          </select>
+          <button
+            type="submit"
+            className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+          >
+            新增
+          </button>
+        </div>
+      </form>
+
+      <div className="space-y-4">
+        {todos.map((todo) => (
+          <TodoCard
+            key={todo.id}
+            todo={todo}
+            onToggle={toggleTodo}
+            onDelete={deleteTodo}
+          />
+        ))}
       </div>
-    </div>
+    </main>
   );
-};
-
-export default Home;
+}
